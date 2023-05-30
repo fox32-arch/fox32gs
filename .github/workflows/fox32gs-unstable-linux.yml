@@ -1,10 +1,14 @@
-on: [push]
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
 
-name: run cputest
+name: fox32gs Unstable - Linux
 
 jobs:
-  fox32-run-cputest:
-    name: Build and test
+  fox32-unstable-linux:
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -14,13 +18,6 @@ jobs:
         with:
           repo: fox32-arch/fox32rom
           workflow: fox32rom-unstable.yml
-          workflow_conclusion: success
-
-      - name: Download latest cputest artifact
-        uses: dawidd6/action-download-artifact@v2
-        with:
-          repo: fox32-arch/demos
-          workflow: demos-unstable.yml
           workflow_conclusion: success
 
       - name: Move fox32.rom into the root folder
@@ -36,7 +33,8 @@ jobs:
       - name: Build
         run: make
 
-      - name: Test
-        run: |
-          ./fox32 --headless --rom cputest/cputest.bin | tee cputest.log
-          grep 'All tests passed' cputest.log
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: fox32gs
+          path: fox32gs
