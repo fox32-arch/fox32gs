@@ -14,11 +14,10 @@
 #endif
 
 #include "bus.h"
+#include "buttons.h"
+#include "cd-rom.h"
 #include "cpu.h"
-#include "disk.h"
 #include "framebuffer.h"
-#include "keyboard.h"
-#include "mouse.h"
 #include "screen.h"
 #include "serial.h"
 
@@ -31,7 +30,6 @@
 fox32_vm_t vm;
 
 extern bool bus_requests_exit;
-extern disk_controller_t disk_controller;
 
 uint32_t tick_start;
 uint32_t tick_end;
@@ -53,7 +51,6 @@ int main(int argc, char *argv[]) {
 
     memcpy(vm.memory_rom, fox32rom, sizeof(fox32rom));
 
-    size_t disk_id = 0;
 #ifndef __EMSCRIPTEN__
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--help") == 0) {
@@ -61,18 +58,19 @@ int main(int argc, char *argv[]) {
                     "Usage: %s [OPTIONS]\n\n"
                     "Options:\n"
                     "  --help         Print this message\n"
-                    "  --disk DISK    Specify a disk image to use\n"
+                    "  --cd CD        Specify a CD-ROM image to use\n"
+                    "  --card CARD    Specify a memory card image to use\n"
                     "  --rom ROM      Specify a ROM image to use\n"
                     "  --debug        Enable debug output\n"
                     "  --headless     Headless mode: don't open a window\n"
                    , argv[0]);
             return 0;
-        } else if (strcmp(argv[i], "--disk") == 0) {
+        } else if (strcmp(argv[i], "--cd") == 0) {
             if (i + 1 < argc) {
-                new_disk(argv[i + 1], disk_id++);
+                new_cd(argv[i + 1]);
                 i++;
             } else {
-                fprintf(stderr, "no disk image specified\n");
+                fprintf(stderr, "no CD-ROM image specified\n");
                 return 1;
             }
         } else if (strcmp(argv[i], "--rom") == 0) {
@@ -93,7 +91,7 @@ int main(int argc, char *argv[]) {
         }
     }
 #else
-    new_disk("fox32os.img", disk_id++);
+    // TODO: default CD-ROM when compiling for emscripten
 #endif
 
     if (!vm.headless) {
@@ -109,9 +107,9 @@ int main(int argc, char *argv[]) {
             draw_framebuffer,
             key_pressed,
             key_released,
-            mouse_pressed,
-            mouse_released,
-            mouse_moved,
+            NULL,
+            NULL,
+            NULL,
             drop_file
         );
 
@@ -119,7 +117,9 @@ int main(int argc, char *argv[]) {
         ScreenDraw();
     }
 
+#ifndef WINDOWS
     serial_init();
+#endif
 
     tick_start = SDL_GetTicks();
     tick_end = SDL_GetTicks();
@@ -205,6 +205,7 @@ void load_rom(const char *filename) {
     }
 
     printf("using %s as boot ROM\n", filename);
-    fread(&vm.memory_rom, sizeof(fox32rom), 1, rom);
+    size_t _ = fread(&vm.memory_rom, sizeof(fox32rom), 1, rom);
+    (void) _;
     fclose(rom);
 }

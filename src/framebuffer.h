@@ -2,8 +2,8 @@
 
 #include "screen.h"
 
-#define FRAMEBUFFER_WIDTH  640
-#define FRAMEBUFFER_HEIGHT 480
+#define FRAMEBUFFER_WIDTH  320
+#define FRAMEBUFFER_HEIGHT 240
 
 #define VSYNC_INTERRUPT_VECTOR 0xFF
 

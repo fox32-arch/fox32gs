@@ -25,7 +25,7 @@ SDL_Rect WindowRect;
 
 void ScreenInit() {
     ScreenWindow = SDL_CreateWindow(
-        "fox32 emulator",
+        "fox32gs emulator",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
         (int)(WindowWidth * SCREEN_ZOOM),
         (int)(WindowHeight * SCREEN_ZOOM),

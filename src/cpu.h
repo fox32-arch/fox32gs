@@ -5,10 +5,14 @@
 #include <stdbool.h>
 #include <setjmp.h>
 
-#define FOX32_CPU_HZ 33000000
+#include "framebuffer.h"
 
-#define FOX32_MEMORY_RAM 0x04000000 //  64 MiB
-#define FOX32_MEMORY_ROM 0x00080000 // 512 KiB
+#define FOX32_CPU_HZ 16000000
+
+#define FOX32_MEMORY_RAM 0x00400000    // 4 MiB
+#define FOX32_MEMORY_SHARED 0x00400000 // 4 MiB
+#define FOX32_MEMORY_SHARED_START 0x80000000
+#define FOX32_MEMORY_ROM 0x00080000    // 512 KiB
 #define FOX32_MEMORY_ROM_START 0xF0000000
 
 #define FOX32_POINTER_DEFAULT_INSTR FOX32_MEMORY_ROM_START
@@ -72,6 +76,7 @@ typedef struct {
     fox32_io_write_t *io_write;
 
     uint8_t memory_ram[FOX32_MEMORY_RAM];
+    uint8_t memory_shared[FOX32_MEMORY_SHARED];
     uint8_t memory_rom[FOX32_MEMORY_ROM];
 } fox32_vm_t;
 

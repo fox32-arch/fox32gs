@@ -11,11 +11,11 @@
 #include <time.h>
 
 #include "bus.h"
+#include "buttons.h"
+#include "cd-rom.h"
 #include "cpu.h"
-#include "disk.h"
 #include "framebuffer.h"
-#include "keyboard.h"
-#include "mouse.h"
+#include "memory-card.h"
 #include "serial.h"
 
 bool bus_requests_exit = false;
@@ -24,16 +24,19 @@ extern time_t rtc_time;
 extern uint32_t rtc_uptime;
 
 extern fox32_vm_t vm;
-extern disk_controller_t disk_controller;
-extern mouse_t mouse;
+extern uint16_t button_bitmap;
+extern cd_controller_t cd_controller;
+extern memory_card_controller_t memory_card_controller;
 
 int bus_io_read(void *user, uint32_t *value, uint32_t port) {
     (void) user;
     switch (port) {
+#ifndef WINDOWS
         case 0x00000000: { // serial port
             *value = serial_get();
             break;
         };
+#endif
 
         case 0x80000000 ... 0x8000031F: { // overlay port
             uint8_t overlay_number = port & 0x000000FF;
@@ -68,31 +71,11 @@ int bus_io_read(void *user, uint32_t *value, uint32_t port) {
             break;
         };
 
-        case 0x80000400 ... 0x80000401: { // mouse port
-            uint8_t setting = port & 0x000000FF;
-            switch (setting) {
-                case 0x00: {
-                    // button states
-                    if (mouse.clicked) *value |= 0b001;
-                    if (mouse.released) *value |= 0b010;
-                    if (mouse.held) *value |= 0b100; else *value &= ~(0b100);
-                    break;
-                };
-                case 0x01: {
-                    // position
-                    *value = (mouse.y << 16) | mouse.x;
-                    break;
-                };
-            }
+        case 0x80000400: { // button port
+            *value = button_bitmap;
 
             break;
         };
-
-        case 0x80000500: {
-            *value = (uint32_t) key_take();
-
-            break;
-        }
 
         case 0x80000700 ... 0x80000707: { // RTC port
             uint8_t setting = port & 0x000000FF;
@@ -135,19 +118,38 @@ int bus_io_read(void *user, uint32_t *value, uint32_t port) {
             break;
         }
 
-        case 0x80001000 ... 0x80002003: { // disk controller port
-            size_t id = port & 0xFF;
+        case 0x80001000 ... 0x80002000: { // CD-ROM controller port
             uint8_t operation = (port & 0x0000F000) >> 8;
             switch (operation) {
                 case 0x10: {
-                    // current insert state of specified disk id
-                    // size will be zero if disk isn't inserted
-                    *value = get_disk_size(id);
+                    // current insert state of CD-ROM
+                    // size will be zero if disc isn't inserted
+                    *value = get_cd_size();
                     break;
                 };
                 case 0x20: {
                     // current buffer pointer
-                    *value = disk_controller.buffer_pointer;
+                    *value = cd_controller.buffer_pointer;
+                    break;
+                };
+            }
+
+            break;
+        };
+
+        case 0x80006000 ... 0x80007001: { // memory card controller port
+            size_t id = port & 0xFF;
+            uint8_t operation = (port & 0x0000F000) >> 8;
+            switch (operation) {
+                case 0x60: {
+                    // current insert state of specified memory card id
+                    // size will be zero if card isn't inserted
+                    *value = get_memory_card_size(id);
+                    break;
+                };
+                case 0x70: {
+                    // current buffer pointer
+                    *value = memory_card_controller.buffer_pointer;
                     break;
                 };
             }
@@ -202,29 +204,7 @@ int bus_io_write(void *user, uint32_t value, uint32_t port) {
             break;
         };
 
-        case 0x80000400 ... 0x80000401: { // mouse port
-            uint8_t setting = port & 0x000000FF;
-            switch (setting) {
-                case 0x00: {
-                    // button states
-                    mouse.clicked = value & 0b001;
-                    mouse.released = value & 0b010;
-                    mouse.held = value & 0b100;
-                    break;
-                };
-                case 0x01: {
-                    // position
-                    mouse.x = value & 0x0000FFFF;
-                    mouse.y = (value & 0xFFFF0000) >> 16;
-                    break;
-                };
-            }
-
-            break;
-        };
-
-        case 0x80001000 ... 0x80005003: { // disk controller port
-            size_t id = port & 0xFF;
+        case 0x80001000 ... 0x80005000: { // CD-ROM controller port
             uint8_t operation = (port & 0x0000F000) >> 8;
             switch (operation) {
                 case 0x10: {
@@ -233,30 +213,64 @@ int bus_io_write(void *user, uint32_t value, uint32_t port) {
                 };
                 case 0x20: {
                     // set the buffer pointer
-                    disk_controller.buffer_pointer = value;
+                    cd_controller.buffer_pointer = value;
                     break;
                 };
                 case 0x30: {
                     // read specified disk sector into memory
-                    set_disk_sector(id, value);
-                    read_disk_into_memory(id);
+                    set_cd_sector(value);
+                    read_cd_into_memory();
                     break;
                 };
                 case 0x40: {
-                    // write specified disk sector from memory
-                    set_disk_sector(id, value);
-                    write_disk_from_memory(id);
+                    // no-op
                     break;
                 };
                 case 0x50: {
-                    // remove specified disk
-                    remove_disk(id);
+                    // remove CD-ROM
+                    remove_cd();
                     break;
                 };
             }
 
             break;
         };
+
+        case 0x80006000 ... 0x8000A003: { // memory card controller port
+            size_t id = port & 0xFF;
+            uint8_t operation = (port & 0x0000F000) >> 8;
+            switch (operation) {
+                case 0x60: {
+                    // no-op
+                    break;
+                };
+                case 0x70: {
+                    // set the buffer pointer
+                    memory_card_controller.buffer_pointer = value;
+                    break;
+                };
+                case 0x80: {
+                    // read specified memory card sector into memory
+                    set_memory_card_sector(id, value);
+                    read_memory_card_into_memory(id);
+                    break;
+                };
+                case 0x90: {
+                    // write specified memory card sector from memory
+                    set_memory_card_sector(id, value);
+                    write_memory_card_from_memory(id);
+                    break;
+                };
+                case 0xA0: {
+                    // remove specified memory card
+                    remove_memory_card(id);
+                    break;
+                };
+            }
+
+            break;
+        };
+
 
         case 0x80010000: { // power control port
             if (value == 0) {
@@ -269,11 +283,5 @@ int bus_io_write(void *user, uint32_t value, uint32_t port) {
 }
 
 void drop_file(char *filename) {
-    int last_id = 0;
-    for (int i = 0; i < 4; i++) {
-        if (disk_controller.disks[i].size != 0) {
-            last_id++;
-        }
-    }
-    new_disk(filename, last_id);
+    new_cd(filename);
 }

@@ -434,6 +434,12 @@ static uint8_t *vm_findmemory_phys(vm_t *vm, uint32_t address, uint32_t size, bo
         ) {
             return &vm->memory_rom[address];
         }
+        if (
+            (address >= FOX32_MEMORY_SHARED_START) &&
+            (address -= FOX32_MEMORY_SHARED_START) + size <= FOX32_MEMORY_SHARED
+        ) {
+            return &vm->memory_shared[address];
+        }
     }
     if (!write) {
         vm->exception_operand = address;

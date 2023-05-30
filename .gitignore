@@ -5,12 +5,12 @@
 fox32.rom
 fox32rom.h
 
-fox32
+fox32gs
 
-fox32.exe
+fox32gs.exe
 SDL2.dll
 
-fox32.html
-fox32.wasm
-fox32.js
-fox32.data
+fox32gs.html
+fox32gs.wasm
+fox32gs.js
+fox32gs.data
