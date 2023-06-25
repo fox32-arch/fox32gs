@@ -2,8 +2,8 @@
 
 *.o
 
-fox32.rom
-fox32rom.h
+libgs.rom
+libgs.h
 
 fox32gs
 

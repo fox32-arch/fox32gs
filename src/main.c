@@ -21,7 +21,7 @@
 #include "screen.h"
 #include "serial.h"
 
-#include "../fox32rom.h"
+#include "../libgs.h"
 
 #define FPS 60
 #define TPF 1
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
     vm.halted = false;
     vm.debug = false;
 
-    memcpy(vm.memory_rom, fox32rom, sizeof(fox32rom));
+    memcpy(vm.memory_rom, libgs_rom, sizeof(libgs_rom));
 
 #ifndef __EMSCRIPTEN__
     for (int i = 1; i < argc; i++) {
@@ -205,7 +205,7 @@ void load_rom(const char *filename) {
     }
 
     printf("using %s as boot ROM\n", filename);
-    size_t _ = fread(&vm.memory_rom, sizeof(fox32rom), 1, rom);
+    size_t _ = fread(&vm.memory_rom, sizeof(libgs_rom), 1, rom);
     (void) _;
     fclose(rom);
 }

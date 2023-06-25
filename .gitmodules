@@ -1,0 +1,6 @@
+[submodule "libgs/meta/okameron"]
+	path = libgs/meta/okameron
+	url = https://github.com/talonfox/okameron
+[submodule "libgs/meta/xloff-sdk"]
+	path = libgs/meta/xloff-sdk
+	url = https://github.com/xrarch/sdk

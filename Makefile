@@ -39,18 +39,18 @@ OBJS = $(addsuffix .o, $(basename $(CFILES)))
 .PHONY: all
 all: fox32gs$(TARGET_FILE_EXTENSION)
 
-FOX32ROM_IN = fox32.rom
-FOX32ROM_OUT = fox32rom.h
+LIBGS_IN = libgs.rom
+LIBGS_OUT = libgs.h
 
-$(FOX32ROM_OUT): $(FOX32ROM_IN)
-	xxd -i $(FOX32ROM_IN) $(FOX32ROM_OUT)
-	sed -i -e 's/fox32_rom/fox32rom/' $(FOX32ROM_OUT)
+$(LIBGS_OUT): $(wildcard libgs/firmware/*.okm)
+	cd libgs; make
+	xxd -i $(LIBGS_IN) $(LIBGS_OUT)
 
-fox32gs$(TARGET_FILE_EXTENSION): $(TARGET_EXTRADEPS) $(OBJS)
+fox32gs$(TARGET_FILE_EXTENSION): $(TARGET_EXTRADEPS) $(OBJS) $(LIBGS_OUT)
 	$(CC) -o $@ $(OBJS) $(LDFLAGS)
 
-%.o: %.c $(FOX32ROM_OUT)
+%.o: %.c $(LIBGS_OUT)
 	$(CC) -o $@ -c $< $(CFLAGS)
 
 clean:
-	rm -rf fox32gs fox32gs.exe fox32gs.wasm fox32gs.html fox32gs.data fox32gs.js fox32rom.h $(OBJS)
+	rm -rf fox32gs fox32gs.exe fox32gs.wasm fox32gs.html fox32gs.data fox32gs.js libgs.h $(OBJS)

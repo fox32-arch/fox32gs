@@ -1,0 +1,6 @@
+MODULE Firmware;
+    PROCEDURE Main();
+    BEGIN
+        PUTINT(080000000H, 0FFFFFFFFH);
+    END;
+END.
