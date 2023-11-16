@@ -5,7 +5,8 @@ XOFTOOL := meta/xloff-sdk/xoftool/xoftool.lua
 all: ../libgs.rom
 
 FIRMWARE_INPUT_FILES = \
-	firmware/Main.okm
+	firmware/Main.okm \
+	firmware/Memory.okm
 
 ../libgs.rom: $(FIRMWARE_INPUT_FILES)
 	lua $(OKAMERON) -arch=fox32 -xrsdk -startup=firmware/start.asm $(FIRMWARE_INPUT_FILES) > firmware/firmware.asm

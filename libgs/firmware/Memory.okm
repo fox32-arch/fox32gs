@@ -1,0 +1,8 @@
+MODULE Memory;
+    ASM "Memory.asm";
+
+    EXTERN PROCEDURE CopyMemoryChar: INT;
+    EXTERN PROCEDURE CopyMemoryInt: INT;
+    EXTERN PROCEDURE CompareMemoryChar: INT;
+    EXTERN PROCEDURE CompareMemoryInt: INT;
+END.
