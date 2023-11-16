@@ -20,10 +20,8 @@ Simply run `make`. The resulting binary will be saved as `fox32gs`. Optionally y
 The following arguments are valid:
 - `--cd <file>`: mount the specified file as a CD-ROM
 - `--card <file>`: specify a memory card image to use
-- `--rom <file>`: use the specified file as the boot ROM. if this argument is not specified then the embedded copy of **fox32rom** is used
+- `--rom <file>`: use the specified file as the boot ROM. if this argument is not specified then the embedded copy of **libgs** is used
 - `--debug`: print a disassembly of each instruction as it runs
-
-See [encoding.md](docs/encoding.md) for information about the instruction set.
 
 ## License
 This project is licensed under the [MIT license](LICENSE).
